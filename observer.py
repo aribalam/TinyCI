@@ -1,4 +1,5 @@
 import argparse
+import subprocess
 
 
 def poll():
@@ -15,3 +16,11 @@ def poll():
 
     args = parser.parse_args()
     dispatcher_host, dispatcher_port = args.dispatcher_parser.split(":")
+
+    while True:
+        try:
+            # try calling a bash script to detect any changes in the repo
+            # Any new commit made will be added to a .commit_id file in the current working directory
+            subprocess.check_output(["./update_repo.sh", args.repo])
+        except subprocess.CalledProcessError as e:
+            raise Exception("Could not update and check repository: " + "Reason: %s" % e.output)
