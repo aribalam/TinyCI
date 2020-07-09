@@ -1,5 +1,7 @@
 import argparse
 import subprocess
+import os
+import time
 
 
 def poll():
@@ -24,3 +26,29 @@ def poll():
             subprocess.check_output(["./update_repo.sh", args.repo])
         except subprocess.CalledProcessError as e:
             raise Exception("Could not update and check repository: " + "Reason: %s" % e.output)
+
+        # check if file exists (a new commit has been made)
+        if os.path.isfile(".commit_id"):
+            try:
+                # try to setup a connection with the dispatcher
+                response = helpers.communicate(dispatcher_host, int(dispatcher_port), "status")
+            except socket.error as e:
+                raise Exception("Could not communicate with dispatcher server: %s" % e)
+
+            # send the commit id to the dispatcher server
+            if response == "OK":
+                commit = ""
+                with open(".commit_id", "r") as f:
+                    commit = f.readline()
+                response = helpers.communicate(dispatcher_host, int(dispatcher_port), "dispatch:%s" % commit)
+
+                # raise error if failed to send commit id
+                if response != "OK":
+                    raise Exception("Could not dispatch commit: %s" % response)
+
+                print("Dispatched!")
+
+            else:
+                raise Exception("Could not dispatch: %s" % response)
+
+        time.sleep(5)
