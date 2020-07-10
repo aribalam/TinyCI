@@ -1,6 +1,34 @@
 import argparse
 from socketserver import ThreadingTCPServer
+import socket
 import threading
+import time
+
+
+def runner_checker(server):
+
+    # function to remove the runner and its assigned commit from the server
+    def manage_commit_lists(runner):
+        for commit, assigned_runner in server.dispatched_commits.iteritems():
+            if assigned_runner == runner:
+                del server.dispatched_commits[commit]
+                server.pending_commits.append(commit)
+            server.runners.remove(runner)
+
+    while not server.dead:
+        time.sleep(1)
+        # Ping each runners to see if its running
+        for runner in server.runners:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                response = helpers.communicate(runner["host"], int(runner["port"]), "ping")
+                # remove the runner and its commit if no response
+                if response != "pong":
+                    print("removing runner %s" % runner)
+                    manage_commit_lists(runner)
+            # remove the runner and its commit in case of any socket exceptions
+            except socket.error as e:
+                manage_commit_lists(runner)
 
 
 def serve():
