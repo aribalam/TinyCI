@@ -5,6 +5,26 @@ import threading
 import time
 
 
+def dispatch_tests(server, commit_id):
+    #NOTE: We usually dont run this forever
+    while True:
+        print("trying to dispatch to runners")
+        for runner in server.runners:
+            response = helpers.communicate(runner["host"],
+                                           int(runner["port"]),
+                                           "runtest:%s" % commit_id)
+            # when a connection is established with the runner
+            if response == "OK":
+                print("Adding commit: %s" % commit_id)
+                # add the commit to the dispatched commits
+                server.dispatched_commit[commit_id] = runner
+                # remove from the pending commits
+                if commit_id in server.pending_commits:
+                    server.pending_commits.remove(commit_id)
+                return
+
+        time.sleep(2)
+
 def runner_checker(server):
 
     # function to remove the runner and its assigned commit from the server
