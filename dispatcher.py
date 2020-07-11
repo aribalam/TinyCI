@@ -31,6 +31,15 @@ def runner_checker(server):
                 manage_commit_lists(runner)
 
 
+def redistribute(server):
+    while not server.dead:
+        # dispatch all pending commits
+        for commit in server.pending_commits:
+            print("runnning redistribute")
+            print(server.pending_commits)
+            dispatch_tests(server, commit)
+            time.sleep(5)
+
 def serve():
     parser = argparse.ArgumentParser()
     # add arguments for dispacher's host and port
