@@ -5,6 +5,13 @@ import threading
 import time
 
 
+class ThreadingTCPServer(SocketServer.ThreadingMixin, SocketServer.TCPServer):
+    runners = []
+    dead = False
+    dispatched_commits = {}
+    pending_commits = []
+
+
 def dispatch_tests(server, commit_id):
     #NOTE: We usually dont run this forever
     while True:
